@@ -1,17 +1,13 @@
 from flask import Flask, request, abort
-from linebot import LineBotApi
-from linebot.v3.webhook import WebhookHandler, MessageEvent  # 從 v3 版本匯入 WebhookHandler
+from linebot import LineBotApi, WebhookHandler,
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import TextMessage, TextSendMessage, TemplateSendMessage, CarouselColumn, \
-                           CarouselTemplate, ButtonsTemplate, ConfirmTemplate, \
-                           MessageAction, URIAction, ImageCarouselColumn, ImageCarouselTemplate
-import os
-import requests
-from bs4 import BeautifulSoup
-import random
+from linebot.models import (MessageEvent, TextMessage, TextSendMessage,CarouselColumn,CarouselTemplate, ButtonsTemplate, ConfirmTemplate,MessageAction, URIAction, ImageCarouselColumn, ImageCarouselTemplate)
 
-line_bot_api = LineBotApi('8CtLI+CFXzbpuuAOCNa6ojQLjHaOlXOoOV1dIqyhZWdD7TCrENZ5dE7XkqsgG2oq+jly6yNse63j6vUwDImZs8pxJQMT10snC2QAT9D0Y/pvf4G8RIM6lkImgjpmFoH2sw20lnSrIJIheaYwINKx5gdB04t89/1O/w1cDnyilFU=')
-line_handler = WebhookHandler("U7943cc174a84dd06f54ccdf14316fc97")
+import os
+import html  # 使用標準庫的 escape 函數
+
+line_bot_api = LineBotApi(os.getenv("LINE_CHANNEL_ACCESS_TOKEN"))
+line_handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
 
 app = Flask(__name__)
 
@@ -21,12 +17,10 @@ def home():
 
 @app.route("/webhook", methods=['POST'])
 def callback():
-    # get X-Line-Signature header value
     signature = request.headers['X-Line-Signature']
-    # get request body as text
     body = request.get_data(as_text=True)
     app.logger.info("Request body: " + body)
-    # handle webhook body
+
     try:
         line_handler.handle(body, signature)
     except InvalidSignatureError:
@@ -35,7 +29,6 @@ def callback():
 
 @line_handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-
     if event.message.text == 'confirm':
         confirm_template = TemplateSendMessage(
             alt_text='confirm template',
